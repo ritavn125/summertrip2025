@@ -3,16 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kế Hoạch Tương Tác Tùy Chỉnh: Chuyến Đi 9 Ngày</title>
+    <title>My Summer Trip 2025: Chuyến Đi 9 Ngày</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- The Chart.js script will be moved to the end of the body -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals (Stone/Orange) with Slate Blue Accent -->
-    <!-- Application Structure Plan: A single-page, vertical timeline design. A sticky top navigation bar allows users to jump to any of the 9 days. Each day is presented as an interactive card containing tabbed sections for 'Accommodation' and 'Food', a list of activities, and a doughnut chart visualizing the day's estimated expenses. This structure transforms the static table into an engaging, explorable journey, allowing users to easily compare daily costs and activities without being overwhelmed. -->
-    <!-- Visualization & Content Choices: 1. Daily Itinerary -> Goal: Organize/Inform -> Method: Interactive Card with Tabs (HTML/JS) -> Interaction: Click tabs for Accommodation/Food -> Justification: Organizes detailed info cleanly. 2. Daily Costs -> Goal: Compare/Inform -> Method: Doughnut Chart (Chart.js) -> Interaction: Hover for tooltips with exact costs -> Justification: Provides a quick, visual comparison of spending categories. 3. Route & Activities -> Goal: Inform -> Method: Styled List (HTML/Tailwind) -> Interaction: Static text -> Justification: Clear and simple presentation of daily plans. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
@@ -46,6 +42,13 @@
         .update-feedback {
             transition: opacity 1s ease-out;
         }
+        /* Custom Modal Styles */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal.flex {
+            display: flex;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -61,77 +64,99 @@
     </nav>
 
     <main id="itinerary-container" class="container mx-auto px-4 py-8 md:py-12">
-        
+        <!-- Itinerary cards will be dynamically inserted here -->
     </main>
 
     <footer class="text-center py-6 bg-slate-800 text-slate-300 mt-8">
         <p>&copy; 2025 Kế Hoạch Chuyến Đi. Chúc bạn có một hành trình an toàn và đáng nhớ!</p>
     </footer>
 
+    <!-- Password and Alert Modals -->
+    <div id="password-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-6 md:p-8 shadow-xl max-w-sm w-full">
+            <h3 class="text-xl font-bold mb-4 text-slate-800">Yêu Cầu Mật Khẩu</h3>
+            <p class="mb-4 text-slate-600">Vui lòng nhập mật khẩu để cập nhật kế hoạch.</p>
+            <input type="password" id="password-input" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 mb-4 p-2">
+            <div class="flex justify-end space-x-3">
+                <button id="modal-cancel" class="px-5 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 transition-colors">Hủy</button>
+                <button id="modal-confirm" class="px-5 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-8 shadow-xl max-w-sm w-full text-center">
+            <p id="alert-message" class="mb-6 text-lg text-slate-700">Mật khẩu không đúng.</p>
+            <button id="alert-ok" class="px-8 py-2 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors">OK</button>
+        </div>
+    </div>
+    
+    <!-- Scripts moved to the end for robust loading -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const tripData = [
             {
                 day: 1, route: "Hà Nội → Huế", distance: "~700 km",
                 activities: ["Xuất phát sớm từ Hà Nội.", "Ăn trưa tại thành phố Vinh.", "Đến Huế nhận phòng và nghỉ ngơi."],
-                accommodation: ["<strong>Tầm trung:</strong> ÊMM Hotel, Century Riverside", "<strong>Cao cấp:</strong> Melia Vinpearl Hue"],
-                food: ["<strong>Trưa:</strong> Cơm/Cháo tại Vinh.", "<strong>Tối:</strong> Bún bò, Cơm hến, các loại bánh Huế."],
-                foodCost: 1500000, accommodationCost: 2750000
+                accommodation: ["Tầm trung: ÊMM Hotel, Century Riverside", "Cao cấp: Melia Vinpearl Hue"],
+                food: ["Trưa: Cơm/Cháo tại Vinh.", "Tối: Bún bò, Cơm hến, các loại bánh Huế."],
+                foodCost: 1500000, accommodationCost: 2750000, otherCost: 300000
             },
             {
                 day: 2, route: "Huế → Măng Đen", distance: "~350 km",
                 activities: ["Tham quan Đại Nội Huế.", "Ăn trưa tại Huế và khởi hành đi Măng Đen."],
-                accommodation: ["<strong>Tầm trung:</strong> Mountain Lodge, T&T Hotel", "<strong>Cao cấp:</strong> Golden Boutique Hotel"],
-                food: ["<strong>Sáng:</strong> Bún bò Huế.", "<strong>Trưa:</strong> Cơm niêu, đặc sản Huế.", "<strong>Tối:</strong> Đặc sản núi rừng Măng Đen."],
-                foodCost: 2000000, accommodationCost: 2600000
+                accommodation: ["Tầm trung: Mountain Lodge, T&T Hotel", "Cao cấp: Golden Boutique Hotel"],
+                food: ["Sáng: Bún bò Huế.", "Trưa: Cơm niêu, đặc sản Huế.", "Tối: Đặc sản núi rừng Măng Đen."],
+                foodCost: 2000000, accommodationCost: 2600000, otherCost: 200000
             },
             {
                 day: 3, route: "Khám phá Măng Đen", distance: "Tại chỗ",
                 activities: ["Tham quan Hồ Đăk Ke, Thác Pa Sỹ.", "Dạo chơi rừng thông, thăm Tượng Đức Mẹ."],
                 accommodation: ["Như trên"],
-                food: ["<strong>Sáng:</strong> Bánh canh cá lóc.", "<strong>Trưa/Tối:</strong> Gà nướng, cơm lam tại Quán Cô Sinh; Lẩu xuyên tiêu tại Măng Đen Lữ Quán."],
-                foodCost: 2050000, accommodationCost: 2600000
+                food: ["Sáng: Bánh canh cá lóc.", "Trưa/Tối: Gà nướng, cơm lam tại Quán Cô Sinh; Lẩu xuyên tiêu tại Măng Đen Lữ Quán."],
+                foodCost: 2050000, accommodationCost: 2600000, otherCost: 500000
             },
             {
                 day: 4, route: "Măng Đen → BMT", distance: "~280 km",
                 activities: ["Rời Măng Đen.", "Ghé Biển Hồ T'nưng (Pleiku).", "Ăn trưa tại Pleiku, chiều đến Buôn Ma Thuột."],
-                accommodation: ["<strong>Tầm trung:</strong> Elephants Hotel, Sài Gòn-Ban Mê", "<strong>Cao cấp:</strong> Mường Thanh Luxury BMT"],
-                food: ["<strong>Sáng:</strong> Phở địa phương.", "<strong>Trưa:</strong> Phở khô Gia Lai.", "<strong>Tối:</strong> Bún đỏ, đặc sản BMT."],
-                foodCost: 1500000, accommodationCost: 2350000
+                accommodation: ["Tầm trung: Elephants Hotel, Sài Gòn-Ban Mê", "Cao cấp: Mường Thanh Luxury BMT"],
+                food: ["Sáng: Phở địa phương.", "Trưa: Phở khô Gia Lai.", "Tối: Bún đỏ, đặc sản BMT."],
+                foodCost: 1500000, accommodationCost: 2350000, otherCost: 150000
             },
             {
                 day: 5, route: "BMT → Quy Nhơn", distance: "~230 km",
                 activities: ["Tham quan KDL Buôn Đôn.", "Ăn trưa và khởi hành đi Quy Nhơn."],
-                accommodation: ["<strong>Tầm trung:</strong> Anya Premier, Seaside Boutique", "<strong>Cao cấp:</strong> Anantara, FLC Resort"],
-                food: ["<strong>Sáng:</strong> Bún đỏ, bánh cuốn.", "<strong>Trưa:</strong> Cơm lam, gà nướng.", "<strong>Tối:</strong> Thưởng thức hải sản Quy Nhơn."],
-                foodCost: 2000000, accommodationCost: 3500000
+                accommodation: ["Tầm trung: Anya Premier, Seaside Boutique", "Cao cấp: Anantara, FLC Resort"],
+                food: ["Sáng: Bún đỏ, bánh cuốn.", "Trưa: Cơm lam, gà nướng.", "Tối: Thưởng thức hải sản Quy Nhơn."],
+                foodCost: 2000000, accommodationCost: 3500000, otherCost: 400000
             },
             {
                 day: 6, route: "Khám phá Quy Nhơn", distance: "Tại chỗ",
                 activities: ["Tham quan Eo Gió, Kỳ Co.", "Ghé Tháp Đôi, Ghềnh Ráng."],
                 accommodation: ["Như trên"],
-                food: ["<strong>Sáng:</strong> Bún cá Quy Nhơn.", "<strong>Trưa:</strong> Bánh xèo tôm nhảy Gia Vỹ.", "<strong>Tối:</strong> Hải sản ven biển hoặc Ốc Thúy Kiều."],
-                foodCost: 2250000, accommodationCost: 3500000
+                food: ["Sáng: Bún cá Quy Nhơn.", "Trưa: Bánh xèo tôm nhảy Gia Vỹ.", "Tối: Hải sản ven biển hoặc Ốc Thúy Kiều."],
+                foodCost: 2250000, accommodationCost: 3500000, otherCost: 600000
             },
             {
                 day: 7, route: "Quy Nhơn → Hội An", distance: "~300 km",
                 activities: ["Tận hưởng buổi sáng tại Quy Nhơn.", "Chiều đến Biển An Bàng.", "Tối dạo chơi Phố cổ Hội An."],
-                accommodation: ["<strong>Tầm trung:</strong> An Bang Beach Hideaway", "<strong>Cao cấp:</strong> Sol An Bang Beach Resort"],
-                food: ["<strong>Sáng:</strong> Đặc sản Quy Nhơn.", "<strong>Trưa:</strong> Dừng ăn trên đường.", "<strong>Tối:</strong> Cao lầu, cơm gà Bà Buội, bánh mì Phượng."],
-                foodCost: 1800000, accommodationCost: 3250000
+                accommodation: ["Tầm trung: An Bang Beach Hideaway", "Cao cấp: Sol An Bang Beach Resort"],
+                food: ["Sáng: Đặc sản Quy Nhơn.", "Trưa: Dừng ăn trên đường.", "Tối: Cao lầu, cơm gà Bà Buội, bánh mì Phượng."],
+                foodCost: 1800000, accommodationCost: 3250000, otherCost: 250000
             },
             {
                 day: 8, route: "Hội An → Vinh", distance: "~440 km",
                 activities: ["Tắm biển hoặc cà phê phố cổ.", "Ăn trưa tại Đồng Hới/Hà Tĩnh.", "Tối đến Vinh và nghỉ ngơi."],
-                accommodation: ["<strong>Khách sạn:</strong> Mường Thanh Luxury Sông Lam, Mường Thanh Grand Phương Đông."],
-                food: ["<strong>Sáng:</strong> Mì Quảng/Cao Lầu.", "<strong>Trưa:</strong> Cơm địa phương.", "<strong>Tối:</strong> Cháo/Súp lươn Nghệ An."],
-                foodCost: 1500000, accommodationCost: 2000000
+                accommodation: ["Khách sạn: Mường Thanh Luxury Sông Lam, Mường Thanh Grand Phương Đông."],
+                food: ["Sáng: Mì Quảng/Cao Lầu.", "Trưa: Cơm địa phương.", "Tối: Cháo/Súp lươn Nghệ An."],
+                foodCost: 1500000, accommodationCost: 2000000, otherCost: 100000
             },
             {
                 day: 9, route: "Vinh → Hà Nội", distance: "~296 km",
                 activities: ["Tham quan Quảng trường HCM hoặc nghỉ ngơi.", "Ăn trưa tại Thanh Hóa và trở về Hà Nội."],
                 accommodation: ["Về nhà"],
-                food: ["<strong>Sáng:</strong> Đặc sản Vinh.", "<strong>Trưa:</strong> Cơm địa phương."],
-                foodCost: 1000000, accommodationCost: 0
+                food: ["Sáng: Đặc sản Vinh.", "Trưa: Cơm địa phương."],
+                foodCost: 1000000, accommodationCost: 0, otherCost: 50000
             }
         ];
 
@@ -146,7 +171,7 @@
 
             tripData.forEach((dayData, index) => {
                 const dayId = `day-${dayData.day}`;
-                const totalCost = dayData.foodCost + dayData.accommodationCost;
+                const totalCost = dayData.foodCost + dayData.accommodationCost + dayData.otherCost;
 
                 const navButton = `<a href="#${dayId}" class="nav-button whitespace-nowrap text-sm md:text-base px-3 py-2 rounded-md text-slate-600 hover:bg-slate-200 transition-colors duration-300">Ngày ${dayData.day}</a>`;
                 dayNavContainer.innerHTML += navButton;
@@ -158,42 +183,50 @@
                                 <h2 class="text-3xl font-bold text-slate-800 mb-2">Ngày ${dayData.day}: ${dayData.route}</h2>
                                 <p class="text-slate-500 font-medium mb-6">Quãng đường: ${dayData.distance}</p>
                                 
-                                <h3 class="text-xl font-semibold text-slate-700 mb-3">📝 Hoạt động chính</h3>
-                                <ul class="space-y-2 list-inside list-disc text-slate-600 mb-8">
-                                    ${dayData.activities.map(activity => `<li>${activity}</li>`).join('')}
-                                </ul>
-
-                                <div class="tabs">
-                                    <div class="flex border-b border-slate-200 mb-4">
-                                        <button data-tab-target="#food-${dayId}" class="tab-button active text-lg px-4 py-2 border-b-2 border-transparent transition-colors">Ẩm thực 🍔</button>
-                                        <button data-tab-target="#accom-${dayId}" class="tab-button text-lg px-4 py-2 border-b-2 border-transparent transition-colors">Nơi ở 🏨</button>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="activity-details-${dayId}" class="text-xl font-semibold text-slate-700 mb-3 block">📝 Hoạt động chính</label>
+                                        <textarea id="activity-details-${dayId}" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">${dayData.activities.join('\n')}</textarea>
                                     </div>
-                                    <form class="space-y-4" data-day-index="${index}">
-                                        <div id="food-${dayId}" data-tab-content class="active">
+
+                                    <div class="tabs pt-4">
+                                        <h3 class="text-xl font-semibold text-slate-700 mb-3">💰 Chi phí & Chi tiết</h3>
+                                        <div class="flex border-b border-slate-200 mb-4">
+                                            <button data-tab-target="#food-${dayId}" class="tab-button active text-lg px-4 py-2 border-b-2 border-transparent transition-colors">Ẩm thực 🍔</button>
+                                            <button data-tab-target="#accom-${dayId}" class="tab-button text-lg px-4 py-2 border-b-2 border-transparent transition-colors">Nơi ở 🏨</button>
+                                            <button data-tab-target="#other-${dayId}" class="tab-button text-lg px-4 py-2 border-b-2 border-transparent transition-colors">Khác 🎟️</button>
+                                        </div>
+                                        <div id="food-${dayId}" data-tab-content class="active space-y-4">
                                             <div>
                                                 <label for="food-details-${dayId}" class="block text-sm font-medium text-slate-600">Gợi ý / Lựa chọn nhà hàng</label>
-                                                <textarea id="food-details-${dayId}" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">${dayData.food.join('\n').replace(/<\/?strong>/g, '')}</textarea>
+                                                <textarea id="food-details-${dayId}" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">${dayData.food.join('\n')}</textarea>
                                             </div>
                                             <div>
                                                 <label for="food-cost-${dayId}" class="block text-sm font-medium text-slate-600">Tổng chi phí ăn uống (VNĐ)</label>
                                                 <input type="number" id="food-cost-${dayId}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500" value="${dayData.foodCost}">
                                             </div>
                                         </div>
-                                        <div id="accom-${dayId}" data-tab-content>
+                                        <div id="accom-${dayId}" data-tab-content class="space-y-4">
                                             <div>
                                                 <label for="accom-details-${dayId}" class="block text-sm font-medium text-slate-600">Gợi ý / Lựa chọn khách sạn</label>
-                                                <textarea id="accom-details-${dayId}" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">${dayData.accommodation.join('\n').replace(/<\/?strong>/g, '')}</textarea>
+                                                <textarea id="accom-details-${dayId}" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">${dayData.accommodation.join('\n')}</textarea>
                                             </div>
                                             <div>
                                                 <label for="accom-cost-${dayId}" class="block text-sm font-medium text-slate-600">Tổng chi phí nơi ở (VNĐ)</label>
                                                 <input type="number" id="accom-cost-${dayId}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500" value="${dayData.accommodationCost}">
                                             </div>
                                         </div>
-                                        <div class="flex items-center space-x-4">
-                                            <button type="button" class="update-btn bg-orange-500 text-white font-semibold py-2 px-5 rounded-lg hover:bg-orange-600 transition-colors" data-day-index="${index}">Cập nhật</button>
-                                            <span id="feedback-${dayId}" class="text-green-600 font-medium opacity-0 update-feedback">Đã cập nhật!</span>
+                                        <div id="other-${dayId}" data-tab-content class="space-y-4">
+                                            <div>
+                                                <label for="other-cost-${dayId}" class="block text-sm font-medium text-slate-600">Chi phí khác (vé, xăng xe, v.v.)</label>
+                                                <input type="number" id="other-cost-${dayId}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500" value="${dayData.otherCost}">
+                                            </div>
                                         </div>
-                                    </form>
+                                    </div>
+                                    <div class="flex items-center space-x-4 pt-6">
+                                        <button type="button" class="update-btn bg-orange-500 text-white font-semibold py-2 px-5 rounded-lg hover:bg-orange-600 transition-colors" data-day-index="${index}">Cập nhật</button>
+                                        <span id="feedback-${dayId}" class="text-green-600 font-medium opacity-0 update-feedback">Đã cập nhật!</span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -222,11 +255,11 @@
                 const chart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Ăn uống', 'Nơi ở'],
+                        labels: ['Ăn uống', 'Nơi ở', 'Khác'],
                         datasets: [{
                             label: 'Chi phí',
-                            data: [dayData.foodCost, dayData.accommodationCost],
-                            backgroundColor: ['#fb923c', '#475569'],
+                            data: [dayData.foodCost, dayData.accommodationCost, dayData.otherCost],
+                            backgroundColor: ['#fb923c', '#475569', '#a8a29e'], // Orange, Slate, Stone
                             borderColor: '#ffffff',
                             borderWidth: 4,
                             hoverOffset: 8
@@ -256,6 +289,7 @@
         }
 
         function setupEventListeners() {
+            // Tab switching logic
             const tabs = document.querySelectorAll('[data-tab-target]');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -270,35 +304,103 @@
                 });
             });
 
+            // --- Password Modal Logic ---
+            let currentUpdateDayIndex = null;
+            const passwordModal = document.getElementById('password-modal');
+            const alertModal = document.getElementById('alert-modal');
+            const passwordInput = document.getElementById('password-input');
+            const modalConfirm = document.getElementById('modal-confirm');
+            const modalCancel = document.getElementById('modal-cancel');
+            const alertOk = document.getElementById('alert-ok');
+
+            function showPasswordPrompt(dayIndex) {
+                currentUpdateDayIndex = dayIndex;
+                passwordInput.value = '';
+                passwordModal.classList.remove('hidden');
+                passwordModal.classList.add('flex');
+                passwordInput.focus();
+            }
+
+            function showAlert(message) {
+                document.getElementById('alert-message').textContent = message;
+                alertModal.classList.remove('hidden');
+                alertModal.classList.add('flex');
+            }
+
+            function hideModals() {
+                passwordModal.classList.add('hidden');
+                passwordModal.classList.remove('flex');
+                alertModal.classList.add('hidden');
+                alertModal.classList.remove('flex');
+            }
+
             itineraryContainer.addEventListener('click', function(e) {
                 if (e.target.classList.contains('update-btn')) {
                     const dayIndex = parseInt(e.target.dataset.dayIndex);
-                    const dayId = `day-${tripData[dayIndex].day}`;
-
-                    const newFoodCost = parseInt(document.getElementById(`food-cost-${dayId}`).value) || 0;
-                    const newAccomCost = parseInt(document.getElementById(`accom-cost-${dayId}`).value) || 0;
-                    const newFoodDetails = document.getElementById(`food-details-${dayId}`).value.split('\n');
-                    const newAccomDetails = document.getElementById(`accom-details-${dayId}`).value.split('\n');
-
-                    tripData[dayIndex].foodCost = newFoodCost;
-                    tripData[dayIndex].accommodationCost = newAccomCost;
-                    tripData[dayIndex].food = newFoodDetails;
-                    tripData[dayIndex].accommodation = newAccomDetails;
-                    
-                    charts[dayIndex].data.datasets[0].data = [newFoodCost, newAccomCost];
-                    charts[dayIndex].update();
-
-                    const totalCostEl = document.getElementById(`total-cost-${dayId}`);
-                    totalCostEl.textContent = `${(newFoodCost + newAccomCost).toLocaleString('vi-VN')} VNĐ`;
-
-                    const feedbackEl = document.getElementById(`feedback-${dayId}`);
-                    feedbackEl.style.opacity = 1;
-                    setTimeout(() => {
-                        feedbackEl.style.opacity = 0;
-                    }, 2000);
+                    showPasswordPrompt(dayIndex);
                 }
             });
 
+            modalConfirm.addEventListener('click', () => {
+                if (passwordInput.value === "summer25") {
+                    hideModals();
+                    performUpdate(currentUpdateDayIndex);
+                } else {
+                    hideModals();
+                    showAlert("Mật khẩu không đúng. Cập nhật đã bị hủy.");
+                }
+            });
+
+            passwordInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    modalConfirm.click();
+                }
+            });
+
+            modalCancel.addEventListener('click', hideModals);
+            alertOk.addEventListener('click', hideModals);
+
+            function performUpdate(dayIndex) {
+                if (dayIndex === null) return;
+
+                const dayId = `day-${tripData[dayIndex].day}`;
+                // Get new values from all editable fields
+                const newActivityDetails = document.getElementById(`activity-details-${dayId}`).value.split('\n');
+                const newFoodDetails = document.getElementById(`food-details-${dayId}`).value.split('\n');
+                const newAccomDetails = document.getElementById(`accom-details-${dayId}`).value.split('\n');
+                const newFoodCost = parseInt(document.getElementById(`food-cost-${dayId}`).value) || 0;
+                const newAccomCost = parseInt(document.getElementById(`accom-cost-${dayId}`).value) || 0;
+                const newOtherCost = parseInt(document.getElementById(`other-cost-${dayId}`).value) || 0;
+
+                // Update the main data object
+                tripData[dayIndex] = {
+                    ...tripData[dayIndex],
+                    activities: newActivityDetails,
+                    food: newFoodDetails,
+                    accommodation: newAccomDetails,
+                    foodCost: newFoodCost,
+                    accommodationCost: newAccomCost,
+                    otherCost: newOtherCost
+                };
+                
+                // Update the chart
+                charts[dayIndex].data.datasets[0].data = [newFoodCost, newAccomCost, newOtherCost];
+                charts[dayIndex].update();
+
+                // Update the total cost display
+                const totalCostEl = document.getElementById(`total-cost-${dayId}`);
+                const totalCost = newFoodCost + newAccomCost + newOtherCost;
+                totalCostEl.textContent = `${totalCost.toLocaleString('vi-VN')} VNĐ`;
+
+                // Show feedback message
+                const feedbackEl = document.getElementById(`feedback-${dayId}`);
+                feedbackEl.style.opacity = 1;
+                setTimeout(() => {
+                    feedbackEl.style.opacity = 0;
+                }, 2000);
+            }
+
+            // --- Navigation highlighting on scroll ---
             const navLinks = document.querySelectorAll('.nav-button');
             const sections = document.querySelectorAll('.day-card');
             const observer = new IntersectionObserver((entries) => {
@@ -317,7 +419,8 @@
             sections.forEach(section => observer.observe(section));
         }
 
-        document.addEventListener('DOMContentLoaded', renderApp);
+        // Use window.onload to ensure all external resources like Chart.js are loaded
+        window.onload = renderApp;
 
     </script>
 
